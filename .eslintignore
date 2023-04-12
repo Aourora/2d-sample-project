@@ -1,0 +1,4 @@
+/build/**/*.js
+/public/**/*.js
+/creator.d.ts
+/packages

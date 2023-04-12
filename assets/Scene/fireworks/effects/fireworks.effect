@@ -1,0 +1,133 @@
+// Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
+
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: vs
+      frag: fs
+      blendState:
+        targets:
+        - blend: true
+      rasterizerState:
+        cullMode: none
+      properties:
+        texture: { value: white }
+        alphaThreshold: { value: 0.5 }
+        wh_ratio: {
+          value: 1.78,
+          editor: {
+            tooltip: "宽高比"
+          }
+        }
+}%
+
+
+CCProgram vs %{
+  precision highp float;
+
+  #include <cc-global>
+  #include <cc-local>
+
+  in vec3 a_position;
+
+  #if USE_TEXTURE
+  in vec2 a_uv0;
+  out vec2 v_uv0;
+  #endif
+
+  void main () {
+    vec4 pos = vec4(a_position, 1);
+
+    #if CC_USE_MODEL
+    pos = cc_matViewProj * cc_matWorld * pos;
+    #else
+    pos = cc_matViewProj * pos;
+    #endif
+
+    #if USE_TEXTURE
+    v_uv0 = a_uv0;
+    #endif
+
+
+    gl_Position = pos;
+  }
+}%
+
+
+CCProgram fs %{
+  precision highp float;
+
+  #include <cc-global>
+  #include <alpha-test>
+  #include <texture>
+
+
+  #if USE_TEXTURE
+  in vec2 v_uv0;
+  uniform sampler2D texture;
+  #endif
+
+  uniform ARGS{
+    float wh_ratio;
+  };
+
+
+  vec2 Hash12(float t) {
+    float a = fract(sin(t * 123.45 + 678.9) * 345.124);
+    float b = fract(cos((t + a) * 243.45 + 738.9) * 512.352);
+    return vec2(a, b);
+  }
+
+  float Explosion(vec2 uv, float t) {
+    float m = 0.0;
+    float minBright = 0.001;
+    float maxBright = 0.002;
+    float split = 0.2;
+    float pt = fract(smoothstep(0., split, t));
+    pt = max(0., log(pt + 0.01) * 0.3 + 1.0);
+    float rt = fract(smoothstep(split, 1., t));
+    float rm = smoothstep(split, split + 0.02, t);
+    t = rt;
+    vec2 sp = mix(uv - vec2(0.0, 0.5), uv, pt);
+    float c = 0.008 / length(sp) * pt * mix(1.0, 0.3, pt);
+    m += c;
+
+    for(float i = 0.; i < 60.; i += 1.){
+      float d = length(uv - t * (Hash12(i) - 0.5));
+      float bright = mix(maxBright, minBright, smoothstep(0.01, 0.02, t));
+      bright *= sin(t * 20. + i) * 0.5 + 0.5;
+      bright *= smoothstep(1.0, 0.8, t);
+      bright *= rm;
+      m += bright / d;
+    }
+
+    return m;
+  }
+
+  void main () {
+    vec4 o = vec4(0, 0, 0, 1);
+
+
+    #if USE_TEXTURE
+      CCTexture(texture, v_uv0, o);
+    #endif
+
+    vec2 uv = vec2((v_uv0.x - 0.5) * wh_ratio, v_uv0.y - 0.5);
+   
+
+    for(float i = 0.; i < 1.; i += 1.){
+      float t = cc_time.x * 0.5 + i / 3.;
+      float frt = fract(t);
+      float flt = floor(t);
+      vec3 color = sin(5.0 * vec3(0.345, 0.567, 0.753) * flt) * 0.25 + 0.75;
+      float m = Explosion(uv - (Hash12(i + flt) - 0.5), frt);
+      o.rgb += color * m;
+    }
+
+    #if USE_BGRA
+      gl_FragColor = o.bgra;
+    #else
+      gl_FragColor = o.rgba;
+    #endif
+  }
+}%
