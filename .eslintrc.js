@@ -1,33 +1,43 @@
 module.exports = {
-  env: {
-    browser: true,
-    commonjs: true,
-    es2021: true
-  },
-  extends: 'standard-with-typescript',
-  overrides: [
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/eslint-recommended',
+    'plugin:@typescript-eslint/recommended',
+    'prettier/@typescript-eslint',
+    'plugin:prettier/recommended'
   ],
-  parserOptions: {
-    ecmaVersion: 'latest',
-    project: 'tsconfig.json'
+  parser: '@typescript-eslint/parser',
+  env: {
+    node: true,
+    es6: true
   },
-  plugins: ['@typescript-eslint'],
+  parserOptions: {
+    tsconfigRootDir: __dirname,
+    ecmaVersion: 2017,
+    sourceType: 'module',
+    ecmaFeatures: {
+      impliedStrict: true
+    }
+  },
+  plugins: ['@typescript-eslint', 'prettier'],
   rules: {
+    'prettier/prettier': 'error',
+    '@typescript-eslint/no-unused-vars': 'off',
+    '@typescript-eslint/no-empty-function': 'off',
+    '@typescript-eslint/no-inferrable-types': 'off',
+    '@typescript-eslint/explicit-function-return-type': [
+      'error',
+      {
+        allowExpressions: true
+      }
+    ],
+    '@typescript-eslint/explicit-member-accessibility': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
-    '@typescript-eslint/semi': ['error', 'always'],
-    '@typescript-eslint/strict-boolean-expressions': 'off',
-    '@typescript-eslint/prefer-readonly': 'off',
-    '@typescript-eslint/member-delimiter-style': ['error', {
-      multiline: {
-        delimiter: 'semi',
-        requireLast: true
-      },
-      singleline: {
-        delimiter: 'semi',
-        requireLast: false
-      },
-      multilineDetection: 'brackets'
-    }],
-    semi: ['error', 'always']
+    '@typescript-eslint/camelcase': 'off',
+    '@typescript-eslint/no-var-requires': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+    'no-console': 'off',
+    '@typescript-eslint/indent': ['off', 4, { SwitchCase: 1 }],
+    'no-prototype-builtins': 'off'
   }
 };
