@@ -31,17 +31,17 @@ export default class MapEditor extends cc.Component {
     })
     protected operationTypeToggleContainer: cc.ToggleContainer = null!;
 
-    @property({
-        displayName: '地图类型ToggleContainer',
-        tooltip: '地图类型ToggleContainer',
-        type: cc.ToggleContainer,
-    })
-    protected mapTypeToggleContainer: cc.ToggleContainer = null!;
+    // @property({
+    //     displayName: '地图类型ToggleContainer',
+    //     tooltip: '地图类型ToggleContainer',
+    //     type: cc.ToggleContainer,
+    // })
+    // protected mapTypeToggleContainer: cc.ToggleContainer = null!;
 
     private _button: number = -1;
     private _minScale!: number;
     private _operationType: OperationType = OperationType.normal;
-    private _mapType: MapType = MapType.angle90;
+    private _mapType: MapType = MapType.angle45;
     private _mapData: MapEditorData;
 
     protected onLoad(): void {
@@ -58,8 +58,8 @@ export default class MapEditor extends cc.Component {
             mapType: this._mapType,
             mapWidth: this.mapNode.width,
             mapHeight: this.mapNode.height,
-            nodeWidth: 40,
-            nodeHeight: 40,
+            nodeWidth: 60,
+            nodeHeight: 30,
         });
         this._mapData.render(this.graphics);
     }
@@ -73,9 +73,9 @@ export default class MapEditor extends cc.Component {
         this.operationTypeToggleContainer.checkEvents.push(
             createCompEventHandler(this.node, this, this.toggleOperationType)
         );
-        this.mapTypeToggleContainer.checkEvents.push(
-            createCompEventHandler(this.node, this, this.toggleMapType)
-        );
+        // this.mapTypeToggleContainer.checkEvents.push(
+        //     createCompEventHandler(this.node, this, this.toggleMapType)
+        // );
     }
 
     protected onMouseDown(event: cc.Event.EventMouse): void {
@@ -162,9 +162,9 @@ export default class MapEditor extends cc.Component {
             this.operationTypeToggleContainer.toggleItems.indexOf(toggle);
     }
 
-    public toggleMapType(toggle: cc.Toggle): void {
-        this._mapType = this.mapTypeToggleContainer.toggleItems.indexOf(toggle);
-    }
+    // public toggleMapType(toggle: cc.Toggle): void {
+    //     this._mapType = this.mapTypeToggleContainer.toggleItems.indexOf(toggle);
+    // }
 
     public saveMapData(): void {
         const data = this._mapData.getData();

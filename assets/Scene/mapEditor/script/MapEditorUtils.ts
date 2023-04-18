@@ -52,8 +52,9 @@ export interface MapMethod {
 }
 
 export function saveForWebBrowser(data: any, fileName: string): void {
+    const str = JSON.stringify(data);
     if (cc.sys.isBrowser) {
-        const textFileAsBlob = new Blob([JSON.stringify(data)]);
+        const textFileAsBlob = new Blob([str]);
         const downloadLink = document.createElement('a');
         downloadLink.download = fileName;
         downloadLink.innerHTML = 'Download File';
@@ -67,6 +68,11 @@ export function saveForWebBrowser(data: any, fileName: string): void {
         document.body.appendChild(downloadLink);
         downloadLink.click();
         URL.revokeObjectURL(objectUrl);
+    } else if (cc.sys.isNative) {
+        jsb.fileUtils.writeStringToFile(
+            jsb.fileUtils.getWritablePath(),
+            fileName
+        );
     }
 }
 
@@ -119,9 +125,12 @@ export async function BlobToCCSpriteFrame(blob: Blob): Promise<cc.SpriteFrame> {
     texture.initWithElement(image);
     texture.addRef();
     const spriteFrame = new cc.SpriteFrame(texture);
-    return new Promise((resolve) => {
-        spriteFrame.once('load', () => resolve(spriteFrame));
-    });
+
+    return spriteFrame.textureLoaded()
+        ? Promise.resolve(spriteFrame)
+        : new Promise((resolve) => {
+              spriteFrame.once('load', () => resolve(spriteFrame));
+          });
 }
 
 export function createCompEventHandler<T extends Function>(

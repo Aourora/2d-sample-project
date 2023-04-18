@@ -1,4 +1,5 @@
 import MapEditor from './MapEditor';
+import { createCompEventHandler } from './MapEditorUtils';
 import {
     BlobToCCSpriteFrame,
     MapType,
@@ -83,6 +84,32 @@ export default class MapEditorOpenView extends cc.Component {
         this.selectImgButton.node.on('click', this.selectImg, this);
         this.cancelButton.node.on('click', this.hide, this);
         this.viewCreateButton.node.on('click', this.create, this);
+        this.mapTypeToggleContainer.checkEvents.push(
+            createCompEventHandler(this.node, this, this.onCheckChanged)
+        );
+        this.widthEditBox.textChanged.push(
+            createCompEventHandler(this.node, this, this.onTextChanged)
+        );
+    }
+
+    protected onCheckChanged(string: String): void {
+        this.setEditBox();
+    }
+
+    protected onTextChanged(string: String): void {
+        this.setEditBox(Number(string), Number(this.heightEditBox.string));
+    }
+
+    protected setEditBox(width: number = 40, height: number = 40): void {
+        const { toggleItems } = this.mapTypeToggleContainer;
+        const index = toggleItems.findIndex((item) => item.isChecked);
+        this.heightEditBox.enabled = index !== MapType.honeycomb;
+        this.widthEditBox.string = width.toString();
+
+        this.heightEditBox.string =
+            index !== MapType.honeycomb
+                ? height!.toString()
+                : ((width * Math.sqrt(3)) / 2).toFixed(3);
     }
 
     public async selectImg(): Promise<void> {
@@ -99,9 +126,8 @@ export default class MapEditorOpenView extends cc.Component {
         this.node.active = true;
         this.imageLabel.string = '';
         this.img = null!;
-        this.widthEditBox.string = '40';
-        this.heightEditBox.string = '40';
         this.mapTypeToggleContainer.toggleItems[MapType.angle90].check();
+        this.setEditBox();
     }
 
     public hide(): void {

@@ -3131,7 +3131,7 @@
         "__id__": 76
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 84
@@ -7463,9 +7463,6 @@
     },
     "operationTypeToggleContainer": {
       "__id__": 57
-    },
-    "mapTypeToggleContainer": {
-      "__id__": 84
     },
     "_id": "36zfdEnO9JUJtm46UD/2Gn"
   },
@@ -13098,7 +13095,9 @@
     "imageLabel": {
       "__id__": 179
     },
-    "mapNameEditBox": null,
+    "mapNameEditBox": {
+      "__id__": 171
+    },
     "selectImgButton": {
       "__id__": 188
     },
