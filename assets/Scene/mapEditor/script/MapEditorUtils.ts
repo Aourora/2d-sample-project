@@ -1,60 +1,19 @@
+import { MapType, Point } from './map/MapType';
+
 export enum OperationType {
     erase = 0,
     normal = 1,
     transparency = 2,
 }
 
-export enum MapType {
-    angle45 = 0,
-    angle90 = 1,
-    honeycomb = 2,
-}
-
-export interface MapParams {
-    /**
-     * 地图名称
-     */
-    name: string;
-    /**
-     * 地图背景名称
-     */
-    bgName: string;
-    /**
-     * 地图类型
-     */
-    mapType: MapType;
-    /**
-     * 地图宽
-     */
-    mapWidth: number;
-    /**
-     * 地图高
-     */
-    mapHeight: number;
-    /**
-     * 路点宽
-     */
-    nodeWidth: number;
-    /**
-     * 路点高
-     */
-    nodeHeight: number;
-    /**
-     * 路点信息
-     */
-    roadDataArr?: number[][];
-}
-
-export interface MapMethod {
-    setNodeTypeByPosition: (position: cc.Vec2, type: OperationType) => void;
-    render: (graphics: cc.Graphics) => void;
-    getData: () => MapParams;
-}
-
-export function saveForWebBrowser(data: any, fileName: string): void {
-    const str = JSON.stringify(data);
+/**
+ * 保存文件到本地
+ * @param data 文件内容
+ * @param fileName 文件名
+ */
+export function saveForWebBrowser(data: string, fileName: string): void {
     if (cc.sys.isBrowser) {
-        const textFileAsBlob = new Blob([str]);
+        const textFileAsBlob = new Blob([data]);
         const downloadLink = document.createElement('a');
         downloadLink.download = fileName;
         downloadLink.innerHTML = 'Download File';
@@ -76,6 +35,11 @@ export function saveForWebBrowser(data: any, fileName: string): void {
     }
 }
 
+/**
+ * 打开文件选择器
+ * @param accept 文件类型
+ * @returns
+ */
 export async function uploadForWebBrowser(
     accept: string
 ): Promise<FileList | null> {
@@ -133,6 +97,14 @@ export async function BlobToCCSpriteFrame(blob: Blob): Promise<cc.SpriteFrame> {
           });
 }
 
+/**
+ * 创建EventHandler
+ * @param node
+ * @param component
+ * @param handler
+ * @param customEventData
+ * @returns
+ */
 export function createCompEventHandler<T extends Function>(
     node: cc.Node,
     component: cc.Component,
@@ -147,6 +119,12 @@ export function createCompEventHandler<T extends Function>(
     return eventHandler;
 }
 
+/**
+ * 获取对象函数名称
+ * @param func 需要获取的函数
+ * @param target 函数所在对象
+ * @returns
+ */
 export function getFuncName<T extends Function>(
     func: T,
     target: cc.Component
@@ -160,4 +138,34 @@ export function getFuncName<T extends Function>(
         prototype = Object.getPrototypeOf(prototype);
     }
     return '';
+}
+
+/**
+ * 计算地图行列数量
+ * @param mapType
+ * @param mapWidth
+ * @param mapHeight
+ * @param roadWidth
+ * @param roadHeight
+ * @returns
+ */
+export function calculateHexGrid(
+    mapType: MapType,
+    mapWidth: number,
+    mapHeight: number,
+    roadWidth: number,
+    roadHeight: number
+): Point {
+    const p = { x: 0, y: 0 };
+    if (mapType === MapType.honeycomb) {
+        p.y = Math.ceil(mapHeight / roadHeight);
+        p.x = Math.ceil(mapWidth / (roadWidth * 0.75));
+    } else if (mapType === MapType.angle90) {
+        p.y = Math.ceil(mapHeight / roadHeight);
+        p.x = Math.ceil(mapWidth / roadWidth);
+    } else {
+        p.y = Math.ceil(mapHeight / (roadHeight / 2));
+        p.x = Math.ceil(mapWidth / roadWidth);
+    }
+    return p;
 }

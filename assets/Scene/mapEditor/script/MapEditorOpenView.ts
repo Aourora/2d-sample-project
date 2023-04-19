@@ -1,5 +1,4 @@
 import MapEditor from './MapEditor';
-import MapEditorData from './MapEditorData';
 import {
     BlobToCCSpriteFrame,
     BlobToString,

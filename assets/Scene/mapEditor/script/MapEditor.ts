@@ -1,11 +1,14 @@
-import MapEditorData from './MapEditorData';
 import {
     OperationType,
-    MapType,
     saveForWebBrowser,
     createCompEventHandler,
-    MapParams,
+    calculateHexGrid,
 } from './MapEditorUtils';
+import BaseMap from './map/BaseMap';
+import BevelAngleMap from './map/BevelAngleMap';
+import HoneycombMap from './map/HoneycombMap';
+import { MapParams, MapType } from './map/MapType';
+import RectMap from './map/RectMap';
 
 const { ccclass, property } = cc._decorator;
 
@@ -31,18 +34,10 @@ export default class MapEditor extends cc.Component {
     })
     protected operationTypeToggleContainer: cc.ToggleContainer = null!;
 
-    // @property({
-    //     displayName: '地图类型ToggleContainer',
-    //     tooltip: '地图类型ToggleContainer',
-    //     type: cc.ToggleContainer,
-    // })
-    // protected mapTypeToggleContainer: cc.ToggleContainer = null!;
-
     private _button: number = -1;
     private _minScale!: number;
     private _operationType: OperationType = OperationType.normal;
-    private _mapType: MapType = MapType.angle45;
-    private _mapData: MapEditorData;
+    private _map: BaseMap;
 
     protected onLoad(): void {
         this.init();
@@ -52,16 +47,23 @@ export default class MapEditor extends cc.Component {
     protected init(): void {
         this.calculationMapScale();
         this.calculationMapPos();
-        this._mapData = new MapEditorData({
+        const mapType = MapType.angle90;
+        const mapWidth = this.mapNode.width;
+        const mapHeight = this.mapNode.height;
+        const p = calculateHexGrid(mapType, mapWidth, mapHeight, 40, 40);
+        this._map = this.createMap({
             name: 'test',
             bgName: 'test',
-            mapType: this._mapType,
-            mapWidth: this.mapNode.width,
-            mapHeight: this.mapNode.height,
-            nodeWidth: 60,
-            nodeHeight: 30,
+            mapType,
+            mapWidth,
+            mapHeight,
+            roadWidth: 40,
+            roadHeight: 40,
+            roadDataArr: Array.from({ length: p.y }, () =>
+                new Array(p.x).fill(0)
+            ),
         });
-        this._mapData.render(this.graphics);
+        this._map.renderMap(this.graphics);
     }
 
     protected bindEvent(): void {
@@ -73,9 +75,6 @@ export default class MapEditor extends cc.Component {
         this.operationTypeToggleContainer.checkEvents.push(
             createCompEventHandler(this.node, this, this.toggleOperationType)
         );
-        // this.mapTypeToggleContainer.checkEvents.push(
-        //     createCompEventHandler(this.node, this, this.toggleMapType)
-        // );
     }
 
     protected onMouseDown(event: cc.Event.EventMouse): void {
@@ -116,11 +115,9 @@ export default class MapEditor extends cc.Component {
     }
 
     protected handleMouseLeftMove(event: cc.Event.EventMouse): void {
-        this._mapData.setNodeTypeByPosition(
-            this.mapNode.convertToNodeSpaceAR(event.getLocation()),
-            this._operationType
-        );
-        this._mapData.render(this.graphics);
+        const { x, y } = this.mapNode.convertToNodeSpaceAR(event.getLocation());
+        this._map.setRoadDataByPixel(x, y, this._operationType);
+        this._map.renderMap(this.graphics);
     }
 
     protected handleMouseRightMove(event: cc.Event.EventMouse): void {
@@ -157,28 +154,32 @@ export default class MapEditor extends cc.Component {
         this.mapNode.scale = Math.max(this._minScale, this.mapNode.scale);
     }
 
+    protected createMap(params: MapParams): BaseMap {
+        return params.mapType === MapType.angle90
+            ? new RectMap(params)
+            : params.mapType === MapType.honeycomb
+            ? new HoneycombMap(params)
+            : new BevelAngleMap(params);
+    }
+
     public toggleOperationType(toggle: cc.Toggle): void {
         this._operationType =
             this.operationTypeToggleContainer.toggleItems.indexOf(toggle);
     }
 
-    // public toggleMapType(toggle: cc.Toggle): void {
-    //     this._mapType = this.mapTypeToggleContainer.toggleItems.indexOf(toggle);
-    // }
-
     public saveMapData(): void {
-        const data = this._mapData.getData();
-        saveForWebBrowser(data, `${data.name}.json`);
+        const data = this._map.getMapJsonData();
+        saveForWebBrowser(data, `${this._map.getMapName()}.json`);
     }
 
-    public openMap(spriteFrame: cc.SpriteFrame, mapData: MapParams): void {
+    public openMap(spriteFrame: cc.SpriteFrame, params: MapParams): void {
         spriteFrame.addRef();
         const sprite = this.mapNode.getComponent(cc.Sprite);
         sprite.spriteFrame?.decRef();
         sprite.spriteFrame = spriteFrame;
-        this._mapData = new MapEditorData(mapData);
+        this._map = this.createMap(params);
         this.calculationMapScale();
         this.calculationMapPos();
-        this._mapData.render(this.graphics);
+        this._map.renderMap(this.graphics);
     }
 }

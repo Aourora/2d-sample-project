@@ -1,10 +1,7 @@
 import MapEditor from './MapEditor';
-import { createCompEventHandler } from './MapEditorUtils';
-import {
-    BlobToCCSpriteFrame,
-    MapType,
-    uploadForWebBrowser,
-} from './MapEditorUtils';
+import { calculateHexGrid, createCompEventHandler } from './MapEditorUtils';
+import { BlobToCCSpriteFrame, uploadForWebBrowser } from './MapEditorUtils';
+import { MapType } from './map/MapType';
 
 const { ccclass, property } = cc._decorator;
 
@@ -142,16 +139,31 @@ export default class MapEditorOpenView extends cc.Component {
         )
             return;
         const spriteFrame = await BlobToCCSpriteFrame(this.img);
+        const mapType = this.mapTypeToggleContainer.toggleItems.findIndex(
+            (item) => item.isChecked
+        );
+        const mapWidth = spriteFrame.getOriginalSize().width;
+        const mapHeight = spriteFrame.getOriginalSize().height;
+        const roadWidth = +this.widthEditBox.string;
+        const roadHeight = +this.heightEditBox.string;
+        const p = calculateHexGrid(
+            mapType,
+            mapWidth,
+            mapHeight,
+            roadWidth,
+            roadHeight
+        );
         this.editor.openMap(spriteFrame, {
             name: this.mapNameEditBox.string,
             bgName: this.imageLabel.string,
-            mapType: this.mapTypeToggleContainer.toggleItems.findIndex(
-                (item) => item.isChecked
+            mapType,
+            mapWidth,
+            mapHeight,
+            roadWidth,
+            roadHeight,
+            roadDataArr: Array.from({ length: p.y }, () =>
+                new Array(p.x).fill(0)
             ),
-            mapWidth: spriteFrame.getOriginalSize().width,
-            mapHeight: spriteFrame.getOriginalSize().height,
-            nodeWidth: +this.widthEditBox.string,
-            nodeHeight: +this.heightEditBox.string,
         });
         this.node.active = false;
     }
